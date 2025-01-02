@@ -285,9 +285,9 @@ jobs:
             
           cd target/${{ matrix.target }}/release
           if [[ "$RUNNER_OS" == "Windows" ]]; then
-            mv dufs.exe ${{ matrix.NAME }}
+            mv dufs.exe dufs-${{ matrix.NAME }}
           else
-            mv dufs ${{ matrix.NAME }}
+            mv dufs dufs-${{ matrix.NAME }}
           fi
           sudo chmod -R 777 /opt
           mkdir -p /opt/dufs
@@ -302,8 +302,8 @@ jobs:
         if: ${{ matrix.TARGET != 'aarch64-apple-darwin' && matrix.TARGET != 'aarch64-pc-windows-msvc' && matrix.TARGET != 'x86_64-apple-darwin' && matrix.TARGET != 'x86_64-pc-windows-msvc' && matrix.TARGET != 'i686-pc-windows-msvc' }}
         run: |
           cd /opt/dufs
-          cp ${{ matrix.NAME }} ${{ matrix.NAME }}-upx
-          upx --lzma --best ${{ matrix.NAME }}-upx
+          cp dufs-${{ matrix.NAME }} dufs-${{ matrix.NAME }}-upx
+          upx --lzma --best dufs-${{ matrix.NAME }}-upx
       - name: 上传程序
         uses: actions/upload-artifact@v4
         with:
@@ -317,7 +317,7 @@ jobs:
             body: |
              > ### 编译时间 ：${{ env.build_time }}
 
-              ${{ matrix.NAME }}-upx 为upx压缩文件
+              **-upx** 后缀的 为upx压缩文件
               
               **[官方更新说明](https://github.com/sigoden/dufs/releases)**
 
