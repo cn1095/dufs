@@ -75,7 +75,7 @@ jobs:
       - name: Upload assets
         uses: actions/upload-artifact@v4
         with:
-          name: dufs-material-assets-embed
+          name: dufs-自定义页面
           path: dist
 
   
@@ -203,11 +203,13 @@ jobs:
           wget -q -c https://musl.cc/${{ env.URL }}-cross.tgz -P /opt/musl_gcc/
           tar zxf /opt/musl_gcc/${{ env.URL }}-cross.tgz -C /opt/musl_gcc/
           sudo ln -s /opt/musl_gcc/${{ env.URL }}-cross/bin/*gcc /usr/bin/
-          sudo apt-get update && sudo apt-get install -qq crossbuild-essential-arm64 crossbuild-essential-armhf musl-tools
+          #sudo apt-get update && sudo apt-get install -qq crossbuild-essential-arm64 crossbuild-essential-armhf musl-tools
           if [[ $TARGET =~ ^mips.*$ ]]; then
+            echo "指定 $TARGET 架构 使用rust 1.74版本，若编译失败 请修改此处升级版本 "
             rustup install 1.74
             rustup default 1.74
           else
+            echo "指定 $TARGET 架构 使用rust 1.77版本，若编译失败 请修改此处升级版本 "
             rustup install 1.77
             rustup default 1.77
           fi
@@ -273,8 +275,10 @@ jobs:
         shell: bash
         run: |
           if [[ $TARGET == 'aarch64-apple-darwin' || $TARGET == 'aarch64-pc-windows-msvc' || $TARGET == 'i686-pc-windows-msvc' ]]; then
+            echo "编译： cross build --locked --release --target=${{ matrix.target }}"
             cross build --locked --release --target=${{ matrix.target }}
           else
+            echo "编译： cargo build --locked --release --target=${{ matrix.target }}"
             cargo build --locked --release --target=${{ matrix.target }}
           fi
             
