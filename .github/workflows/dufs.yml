@@ -261,7 +261,7 @@ jobs:
       - name: 下载 assets 页面
         uses: actions/download-artifact@v4
         with:
-          name: dufs-material-assets-embed
+          name: dufs-自定义页面
           path: dufs-material-assets-embed
       - name: 替换自定义 assets 页面
         shell: bash
