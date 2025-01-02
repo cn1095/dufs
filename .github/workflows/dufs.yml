@@ -30,21 +30,21 @@ env:
 
 jobs:
   check:
-  runs-on: ubuntu-latest
-  outputs:
-    ver: ${{ steps.getversion.outputs.ver }}
-    tag: ${{ steps.getversion.outputs.tag }}
-  steps:
-  - name: 检查更新
-    id: getversion
-    run: |
+   runs-on: ubuntu-latest
+   outputs:
+     ver: ${{ steps.getversion.outputs.ver }}
+     tag: ${{ steps.getversion.outputs.tag }}
+   steps:
+   - name: 检查更新
+     id: getversion
+     run: |
       ver=`curl https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/latest | jq -r '.tag_name'`
       tag=`curl https://api.github.com/repos/sigoden/dufs/releases/latest | jq -r '.tag_name'`
       echo "ver=${ver}" >> $GITHUB_OUTPUT
       echo "tag=${tag}" >> $GITHUB_OUTPUT
-  -  name: 删除工作流
-     uses: Mattraks/delete-workflow-runs@main
-     with:
+   -  name: 删除工作流
+      uses: Mattraks/delete-workflow-runs@main
+      with:
         token: ${{ secrets.GITHUB_TOKEN }}
         retain_days: 0
         keep_minimum_runs: 0
