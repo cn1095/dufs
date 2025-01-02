@@ -279,7 +279,6 @@ jobs:
       - name: 编译dufs
         shell: bash
         run: |
-          sudo timedatectl set-timezone "Asia/Shanghai"
           if [[ $TARGET == 'aarch64-apple-darwin' || $TARGET == 'aarch64-pc-windows-msvc' || $TARGET == 'i686-pc-windows-msvc' || $TARGET == 'x86_64-unknown-freebsd' ]]; then
             echo "编译： cross build --locked --release --target=${{ matrix.target }}"
             cross build --locked --release --target=${{ matrix.target }}
