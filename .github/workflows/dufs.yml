@@ -299,6 +299,7 @@ jobs:
           version: latest
           install-only: true
       - name: 压缩程序
+        if: ${{ matrix.TARGET != 'aarch64-apple-darwin' && matrix.TARGET != 'aarch64-pc-windows-msvc' && matrix.TARGET != 'x86_64-apple-darwin' && matrix.TARGET != 'x86_64-pc-windows-msvc' && matrix.TARGET != 'i686-pc-windows-msvc' }}
         run: |
           cd /opt/dufs
           cp ${{ matrix.NAME }} ${{ matrix.NAME }}-upx
