@@ -284,15 +284,14 @@ jobs:
           fi
             
           cd target/${{ matrix.target }}/release
+          mkdir -p ./out
           if [[ "$RUNNER_OS" == "Windows" ]]; then
-            mv dufs.exe ${{ matrix.NAME }}
+            mv ./dufs.exe ./out/${{ matrix.NAME }}
           else
-            mv dufs ${{ matrix.NAME }}
+            mv ./dufs ./out/${{ matrix.NAME }}
           fi
           
-          mkdir -p ./out
-          cp ${{ matrix.NAME }} ./out/*
-          ls -alh ./out/
+          ls -alh 
       - name: 安装 UPX
         if: ${{ matrix.TARGET != 'aarch64-apple-darwin' && matrix.TARGET != 'aarch64-pc-windows-msvc' && matrix.TARGET != 'x86_64-apple-darwin' && matrix.TARGET != 'x86_64-pc-windows-msvc' && matrix.TARGET != 'i686-pc-windows-msvc' }}
         uses: crazy-max/ghaction-upx@v3
