@@ -289,9 +289,9 @@ jobs:
           else
             mv dufs ${{ matrix.NAME }}
           fi
-          sudo chmod -R 777 /opt
-          mkdir -p /opt/dufs
-          cp -rf ${{ matrix.NAME }} /opt/dufs/
+          
+          mkdir -p ./out
+          cp -rf ${{ matrix.NAME }} ./out/
       - name: 安装 UPX
         if: ${{ matrix.TARGET != 'aarch64-apple-darwin' && matrix.TARGET != 'aarch64-pc-windows-msvc' && matrix.TARGET != 'x86_64-apple-darwin' && matrix.TARGET != 'x86_64-pc-windows-msvc' && matrix.TARGET != 'i686-pc-windows-msvc' }}
         uses: crazy-max/ghaction-upx@v3
@@ -301,14 +301,14 @@ jobs:
       - name: 压缩程序
         if: ${{ matrix.TARGET != 'aarch64-apple-darwin' && matrix.TARGET != 'aarch64-pc-windows-msvc' && matrix.TARGET != 'x86_64-apple-darwin' && matrix.TARGET != 'x86_64-pc-windows-msvc' && matrix.TARGET != 'i686-pc-windows-msvc' }}
         run: |
-          cd /opt/dufs
+          cd target/${{ matrix.target }}/release/dufs/out
           cp ${{ matrix.NAME }} ${{ matrix.NAME }}-upx
           upx --lzma --best ${{ matrix.NAME }}-upx
       - name: 上传程序
         uses: actions/upload-artifact@v4
         with:
           name: dufs-${{ matrix.target }}
-          path: /opt/dufs/*
+          path: target/${{ matrix.target }}/release/dufs/out/*
 
       - name: 发布
         uses: softprops/action-gh-release@v2
@@ -324,7 +324,7 @@ jobs:
               ${{ github.event.inputs.info }}
               
             tag_name: ${{ env.TAG }}
-            files: /opt/dufs/*
+            files: target/${{ matrix.target }}/release/dufs/out/*
   keepalive-workflow:
     name: 工作流保活
     runs-on: ubuntu-latest
