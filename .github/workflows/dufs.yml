@@ -159,6 +159,7 @@ jobs:
       NAME: ${{ matrix.NAME }}
     steps:
       - name: 确定版本号
+        shell: bash
         run: |
           if [[ "${{ env.BJ }}" == "true" ]]; then
             echo "强制进行编译..."
@@ -198,8 +199,8 @@ jobs:
         run: |
           mkdir -p /opt/musl_gcc
           rustup set auto-self-update disable
-  
-          wget -q -c https://musl.cc/${{ env.URL }}-cross.tgz -P /opt/musl_gcc/
+          echo "下载https://musl.cc/${{ env.URL }}-cross.tgz"
+          wget -c https://musl.cc/${{ env.URL }}-cross.tgz -P /opt/musl_gcc/
           tar zxf /opt/musl_gcc/${{ env.URL }}-cross.tgz -C /opt/musl_gcc/
           sudo ln -s /opt/musl_gcc/${{ env.URL }}-cross/bin/*gcc /usr/bin/
           sudo apt-get update && sudo apt-get install -qq crossbuild-essential-arm64 crossbuild-essential-armhf musl-tools
