@@ -152,6 +152,10 @@ jobs:
           os: ubuntu-latest
           URL: mips-linux-muslsf
           NAME: dufs-mips-linux-muslsf
+
+        - target: x86_64-unknown-freebsd
+          os: ubuntu-latest
+          NAME: dufs-x86_64-freebsd
             
     runs-on: ${{ matrix.os }}
     env:
@@ -185,18 +189,18 @@ jobs:
           ref: ${{ env.TAG }}
           
       - name: 下载apple-windows工具链
-        if: ${{ matrix.TARGET == 'aarch64-apple-darwin' || matrix.TARGET == 'aarch64-pc-windows-msvc' || matrix.TARGET == 'x86_64-apple-darwin' || matrix.TARGET == 'x86_64-pc-windows-msvc' || matrix.TARGET == 'i686-pc-windows-msvc' }}
+        if: ${{ matrix.TARGET == 'aarch64-apple-darwin' || matrix.TARGET == 'aarch64-pc-windows-msvc' || matrix.TARGET == 'x86_64-apple-darwin' || matrix.TARGET == 'x86_64-pc-windows-msvc' || matrix.TARGET == 'i686-pc-windows-msvc' || matrix.TARGET == 'x86_64-unknown-freebsd' }}
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
           
       - name: 下载apple-windows编译工具
-        if: ${{ matrix.TARGET == 'aarch64-apple-darwin' || matrix.TARGET == 'aarch64-pc-windows-msvc' || matrix.TARGET == 'i686-pc-windows-msvc' }}
+        if: ${{ matrix.TARGET == 'aarch64-apple-darwin' || matrix.TARGET == 'aarch64-pc-windows-msvc' || matrix.TARGET == 'i686-pc-windows-msvc' || matrix.TARGET == 'x86_64-unknown-freebsd' }}
         uses: taiki-e/install-action@v2
         with:
           tool: cross
       - name: 下载linux编译工具
-        if: ${{ matrix.TARGET != 'aarch64-apple-darwin' && matrix.TARGET != 'aarch64-pc-windows-msvc' && matrix.TARGET != 'x86_64-apple-darwin' && matrix.TARGET != 'x86_64-pc-windows-msvc' && matrix.TARGET != 'i686-pc-windows-msvc' }}
+        if: ${{ matrix.TARGET != 'aarch64-apple-darwin' && matrix.TARGET != 'aarch64-pc-windows-msvc' && matrix.TARGET != 'x86_64-apple-darwin' && matrix.TARGET != 'x86_64-pc-windows-msvc' && matrix.TARGET != 'i686-pc-windows-msvc' && matrix.TARGET != 'x86_64-unknown-freebsd' }}
         run: |
           mkdir -p /opt/musl_gcc
           rustup set auto-self-update disable
@@ -275,7 +279,7 @@ jobs:
       - name: 编译dufs
         shell: bash
         run: |
-          if [[ $TARGET == 'aarch64-apple-darwin' || $TARGET == 'aarch64-pc-windows-msvc' || $TARGET == 'i686-pc-windows-msvc' ]]; then
+          if [[ $TARGET == 'aarch64-apple-darwin' || $TARGET == 'aarch64-pc-windows-msvc' || $TARGET == 'i686-pc-windows-msvc' || $TARGET == 'x86_64-unknown-freebsd' ]]; then
             echo "编译： cross build --locked --release --target=${{ matrix.target }}"
             cross build --locked --release --target=${{ matrix.target }}
           else
@@ -293,13 +297,13 @@ jobs:
           
           ls -alh ./out/
       - name: 安装 UPX
-        if: ${{ matrix.TARGET != 'aarch64-apple-darwin' && matrix.TARGET != 'aarch64-pc-windows-msvc' && matrix.TARGET != 'x86_64-apple-darwin' && matrix.TARGET != 'x86_64-pc-windows-msvc' && matrix.TARGET != 'i686-pc-windows-msvc' }}
+        if: ${{ matrix.TARGET != 'aarch64-apple-darwin' && matrix.TARGET != 'aarch64-pc-windows-msvc' && matrix.TARGET != 'x86_64-apple-darwin' && matrix.TARGET != 'x86_64-pc-windows-msvc' && matrix.TARGET != 'i686-pc-windows-msvc' && matrix.TARGET != 'x86_64-unknown-freebsd' }}
         uses: crazy-max/ghaction-upx@v3
         with:
           version: latest
           install-only: true
       - name: 压缩程序
-        if: ${{ matrix.TARGET != 'aarch64-apple-darwin' && matrix.TARGET != 'aarch64-pc-windows-msvc' && matrix.TARGET != 'x86_64-apple-darwin' && matrix.TARGET != 'x86_64-pc-windows-msvc' && matrix.TARGET != 'i686-pc-windows-msvc' }}
+        if: ${{ matrix.TARGET != 'aarch64-apple-darwin' && matrix.TARGET != 'aarch64-pc-windows-msvc' && matrix.TARGET != 'x86_64-apple-darwin' && matrix.TARGET != 'x86_64-pc-windows-msvc' && matrix.TARGET != 'i686-pc-windows-msvc' && matrix.TARGET != 'x86_64-unknown-freebsd' }}
         run: |
           cd target/${{ matrix.target }}/release/out
           cp ${{ matrix.NAME }} ${{ matrix.NAME }}-upx
