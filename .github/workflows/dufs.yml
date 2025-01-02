@@ -291,7 +291,8 @@ jobs:
           fi
           
           mkdir -p ./out
-          cp -rf ${{ matrix.NAME }} ./out/*
+          cp ${{ matrix.NAME }} ./out/*
+          ls -alh ./out/
       - name: 安装 UPX
         if: ${{ matrix.TARGET != 'aarch64-apple-darwin' && matrix.TARGET != 'aarch64-pc-windows-msvc' && matrix.TARGET != 'x86_64-apple-darwin' && matrix.TARGET != 'x86_64-pc-windows-msvc' && matrix.TARGET != 'i686-pc-windows-msvc' }}
         uses: crazy-max/ghaction-upx@v3
