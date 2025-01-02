@@ -84,6 +84,7 @@ jobs:
      - build-assets
      - check
     strategy:
+      fail-fast: false
       matrix:
         include:
         
@@ -288,6 +289,7 @@ jobs:
           else
             mv dufs ${{ matrix.NAME }}
           fi
+          sudo chmod -R 777 /opt
           mkdir -p /opt/dufs
           cp -rf ${{ matrix.NAME }} /opt/dufs/
       - name: 安装 UPX
