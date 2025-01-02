@@ -89,93 +89,71 @@ jobs:
         
         - target: aarch64-apple-darwin
           os: macos-latest
-          use-cross: true
-          cargo-flags: ""
+          NAME: aarch64-apple-darwin
           
         - target: aarch64-pc-windows-msvc
           os: windows-latest
-          use-cross: true
-          cargo-flags: ""
+          NAME: aarch64-pc-windows-msvc.exe
           
         - target: x86_64-apple-darwin
           os: macos-latest
-          cargo-flags: ""
+          NAME: x86_64-apple-darwin
           
         - target: x86_64-pc-windows-msvc
           os: windows-latest
-          cargo-flags: ""
-
+          NAME: x86_64-pc-windows-msvc.exe
+          
         - target: i686-pc-windows-msvc
           os: windows-latest
-          use-cross: true
-          cargo-flags: ""
+          NAME: i686-pc-windows-msvc.exe
           
         - target: aarch64-unknown-linux-musl
           os: ubuntu-latest
-          use-cross: true
-          cargo-flags: ""
           URL: aarch64-linux-musl
           NAME: aarch64-linux-musl
           
         - target: x86_64-unknown-linux-musl
           os: ubuntu-latest
-          use-cross: true
-          cargo-flags: ""
           URL: x86_64-linux-musl
           NAME: x86_64-linux-musl
             
         - target: i686-unknown-linux-musl
           os: ubuntu-latest
-          use-cross: true
-          cargo-flags: ""
           URL: i686-linux-musl
           NAME: i686-linux-musl
         
         - target: armv7-unknown-linux-musleabihf
           os: ubuntu-latest
-          use-cross: true
-          cargo-flags: ""
           URL: armv7l-linux-musleabihf
           NAME: armv7-linux-musleabihf
 
         - target: armv7-unknown-linux-musleabi
           os: ubuntu-latest
-          use-cross: true
-          cargo-flags: ""
           URL: armv7m-linux-musleabi
           NAME: armv7-linux-musleabi
           
         - target: arm-unknown-linux-musleabihf
           os: ubuntu-latest
-          use-cross: true
-          cargo-flags: ""
           URL: arm-linux-musleabihf
           NAME: arm-linux-musleabihf
 
         - target: arm-unknown-linux-musleabi
           os: ubuntu-latest
-          use-cross: true
-          cargo-flags: ""
           URL: arm-linux-musleabi
           NAME: arm-linux-musleabi
 
         - target: mipsel-unknown-linux-musl
           os: ubuntu-latest
-          use-cross: true
-          cargo-flags: ""
           URL: mipsel-linux-muslsf
           NAME: mipsel-linux-muslsf
 
         - target: mips-unknown-linux-musl
           os: ubuntu-latest
-          use-cross: true
-          cargo-flags: ""
           URL: mips-linux-muslsf
           NAME: mips-linux-muslsf
             
     runs-on: ${{ matrix.os }}
     env:
-      BUILD_CMD: cargo
       TARGET: ${{ matrix.target }}
       URL: ${{ matrix.URL }}
       NAME: ${{ matrix.NAME }}
@@ -290,11 +268,12 @@ jobs:
           cp dufs-material-assets-embed/index.css assets/index.css
           cp dufs-material-assets-embed/index.html assets/index.html
           cp dufs-material-assets-embed/index.js assets/index.js
-      - name: Build
+      - name: 编译dufs
         shell: bash
-        id: build
         run: |
-          $BUILD_CMD build --locked --release --target=${{ matrix.target }} ${{ matrix.cargo-flags }}
+          if [[ $TARGET =~ ^mips.*$ ]]; then
+            $BUILD_CMD build --locked --release --target=${{ matrix.target }} ${{ matrix.cargo-flags }}
+          
           if [[ "$RUNNER_OS" == "Windows" ]]; then
             echo "executable=target/${{ matrix.target }}/release/dufs.exe" >> $GITHUB_OUTPUT
           else
