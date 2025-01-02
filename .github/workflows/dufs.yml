@@ -284,8 +284,48 @@ jobs:
           else
             mv dufs ${{ matrix.NAME }}
           fi
+          mkdir -p /opt/dufs
+          cp -rf ${{ matrix.NAME }} /opt/dufs/
+      - name: 安装 UPX
+        if: ${{ matrix.TARGET != 'aarch64-apple-darwin' && matrix.TARGET != 'aarch64-pc-windows-msvc' && matrix.TARGET != 'x86_64-apple-darwin' && matrix.TARGET != 'x86_64-pc-windows-msvc' && matrix.TARGET != 'i686-pc-windows-msvc' }}
+        uses: crazy-max/ghaction-upx@v3
+        with:
+          version: latest
+          install-only: true
+      - name: 压缩程序
+        run: |
+          cd /opt/dufs
+          cp ${{ matrix.NAME }} ${{ matrix.NAME }}-upx
+          upx --lzma --best ${{ matrix.NAME }}-upx
       - name: 上传程序
         uses: actions/upload-artifact@v4
         with:
           name: dufs-${{ matrix.target }}
-          path: target/${{ matrix.target }}/release/${{ matrix.NAME }}
+          path: /opt/dufs/*
+
+      - name: 发布
+        uses: softprops/action-gh-release@v2
+        with:
+            token: ${{ github.token }}
+            body: |
+             > ### 编译时间 ：${{ env.build_time }}
+
+              ${{ matrix.NAME }}-upx 为upx压缩文件
+              
+              **[官方更新说明](https://github.com/sigoden/dufs/releases)**
+
+              ${{ github.event.inputs.info }}
+              
+            tag_name: ${{ env.TAG }}
+            files: /opt/dufs/*
+  keepalive-workflow:
+    name: 工作流保活
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: gautamkrishnar/keepalive-workflow@v2
+        #with:
+          #use_api: true
