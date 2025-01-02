@@ -301,14 +301,14 @@ jobs:
       - name: 压缩程序
         if: ${{ matrix.TARGET != 'aarch64-apple-darwin' && matrix.TARGET != 'aarch64-pc-windows-msvc' && matrix.TARGET != 'x86_64-apple-darwin' && matrix.TARGET != 'x86_64-pc-windows-msvc' && matrix.TARGET != 'i686-pc-windows-msvc' }}
         run: |
-          cd target/${{ matrix.target }}/release/dufs/out
+          cd target/${{ matrix.target }}/release/out
           cp ${{ matrix.NAME }} ${{ matrix.NAME }}-upx
           upx --lzma --best ${{ matrix.NAME }}-upx
       - name: 上传程序
         uses: actions/upload-artifact@v4
         with:
           name: dufs-${{ matrix.target }}
-          path: target/${{ matrix.target }}/release/dufs/out/*
+          path: target/${{ matrix.target }}/release/out/*
 
       - name: 发布
         uses: softprops/action-gh-release@v2
@@ -324,7 +324,7 @@ jobs:
               ${{ github.event.inputs.info }}
               
             tag_name: ${{ env.TAG }}
-            files: target/${{ matrix.target }}/release/dufs/out/*
+            files: target/${{ matrix.target }}/release/out/*
   keepalive-workflow:
     name: 工作流保活
     runs-on: ubuntu-latest
