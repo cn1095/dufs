@@ -200,13 +200,13 @@ jobs:
           mkdir -p /opt/musl_gcc
           rustup set auto-self-update disable
           echo "下载https://musl.cc/${{ env.URL }}-cross.tgz"
-          wget -c https://musl.cc/${{ env.URL }}-cross.tgz -P /opt/musl_gcc/
+          wget -q -c https://musl.cc/${{ env.URL }}-cross.tgz -P /opt/musl_gcc/
           tar zxf /opt/musl_gcc/${{ env.URL }}-cross.tgz -C /opt/musl_gcc/
           sudo ln -s /opt/musl_gcc/${{ env.URL }}-cross/bin/*gcc /usr/bin/
           sudo apt-get update && sudo apt-get install -qq crossbuild-essential-arm64 crossbuild-essential-armhf musl-tools
           if [[ $TARGET =~ ^mips.*$ ]]; then
-            rustup install 1.72.1
-            rustup default 1.72.1
+            rustup install 1.74
+            rustup default 1.74
           else
             rustup install 1.77
             rustup default 1.77
