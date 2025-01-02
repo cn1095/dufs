@@ -1,0 +1,307 @@
+name: 编译dufs
+
+on:
+#每天北京时间11点 4点自动检测更新
+  schedule:
+   - cron: "0 3,20 * * *"
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: '指定编译的版本号'
+        required: false
+        default: ''
+      info:
+        description: '发布Release的补充说明'
+        required: false
+        default: ''
+      bj:
+        description: '强制使用手动编译'
+        required: true
+        default: false
+        type: boolean
+permissions:
+  contents: write
+  actions: write
+env:
+  TZ: Asia/Shanghai
+  CARGO_TERM_COLOR: always
+  BJ: ${{ github.event.inputs.bj }}
+  BRANCH: ${{ github.event.inputs.branch }}
+
+jobs:
+  check:
+  runs-on: ubuntu-latest
+  outputs:
+    ver: ${{ steps.getversion.outputs.ver }}
+    tag: ${{ steps.getversion.outputs.tag }}
+  steps:
+  - name: 检查更新
+    id: getversion
+    run: |
+      ver=`curl https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/latest | jq -r '.tag_name'`
+      tag=`curl https://api.github.com/repos/sigoden/dufs/releases/latest | jq -r '.tag_name'`
+      echo "ver=${ver}" >> $GITHUB_OUTPUT
+      echo "tag=${tag}" >> $GITHUB_OUTPUT
+  -  name: 删除工作流
+     uses: Mattraks/delete-workflow-runs@main
+     with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        retain_days: 0
+        keep_minimum_runs: 0
+  build-assets:
+    needs: check
+    if: ${{ github.event.inputs.bj == 'true' || (github.event.inputs.bj != 'true' && needs.check.outputs.ver != needs.check.outputs.tag) }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: TransparentLC/dufs-material-assets
+          ref: master
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: latest
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+          check-latest: true
+          cache: pnpm
+          cache-dependency-path: "**/package.json"
+      - name: Build assets
+        run: |
+          pnpm install
+          DUFS_EMBED_FILENAME=1 pnpm run build
+      - name: Upload assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: dufs-material-assets-embed
+          path: dist
+
+  
+  build-dufs:
+    needs: 
+     - build-assets
+     - check
+    strategy:
+      matrix:
+        include:
+        
+        - target: aarch64-apple-darwin
+          os: macos-latest
+          use-cross: true
+          cargo-flags: ""
+          
+        - target: aarch64-pc-windows-msvc
+          os: windows-latest
+          use-cross: true
+          cargo-flags: ""
+          
+        - target: x86_64-apple-darwin
+          os: macos-latest
+          cargo-flags: ""
+          
+        - target: x86_64-pc-windows-msvc
+          os: windows-latest
+          cargo-flags: ""
+
+        - target: i686-pc-windows-msvc
+          os: windows-latest
+          use-cross: true
+          cargo-flags: ""
+          
+        - target: aarch64-unknown-linux-musl
+          os: ubuntu-latest
+          use-cross: true
+          cargo-flags: ""
+          URL: aarch64-linux-musl
+          NAME: aarch64-linux-musl
+          
+        - target: x86_64-unknown-linux-musl
+          os: ubuntu-latest
+          use-cross: true
+          cargo-flags: ""
+          URL: x86_64-linux-musl
+          NAME: x86_64-linux-musl
+            
+        - target: i686-unknown-linux-musl
+          os: ubuntu-latest
+          use-cross: true
+          cargo-flags: ""
+          URL: i686-linux-musl
+          NAME: i686-linux-musl
+        
+        - target: armv7-unknown-linux-musleabihf
+          os: ubuntu-latest
+          use-cross: true
+          cargo-flags: ""
+          URL: armv7l-linux-musleabihf
+          NAME: armv7-linux-musleabihf
+
+        - target: armv7-unknown-linux-musleabi
+          os: ubuntu-latest
+          use-cross: true
+          cargo-flags: ""
+          URL: armv7m-linux-musleabi
+          NAME: armv7-linux-musleabi
+          
+        - target: arm-unknown-linux-musleabihf
+          os: ubuntu-latest
+          use-cross: true
+          cargo-flags: ""
+          URL: arm-linux-musleabihf
+          NAME: arm-linux-musleabihf
+
+        - target: arm-unknown-linux-musleabi
+          os: ubuntu-latest
+          use-cross: true
+          cargo-flags: ""
+          URL: arm-linux-musleabi
+          NAME: arm-linux-musleabi
+
+        - target: mipsel-unknown-linux-musl
+          os: ubuntu-latest
+          use-cross: true
+          cargo-flags: ""
+          URL: mipsel-linux-muslsf
+          NAME: mipsel-linux-muslsf
+
+        - target: mips-unknown-linux-musl
+          os: ubuntu-latest
+          use-cross: true
+          cargo-flags: ""
+          URL: mips-linux-muslsf
+          NAME: mips-linux-muslsf
+            
+    runs-on: ${{ matrix.os }}
+    env:
+      BUILD_CMD: cargo
+      TARGET: ${{ matrix.target }}
+      URL: ${{ matrix.URL }}
+      NAME: ${{ matrix.NAME }}
+    steps:
+      - name: 确定版本号
+        run: |
+          if [[ "${{ env.BJ }}" == "true" ]]; then
+            echo "强制进行编译..."
+            if [[ -n "${{ github.event.inputs.branch }}" ]]; then
+                echo "使用手动指定的版本：${{ github.event.inputs.branch }}"
+                TAG=${{ github.event.inputs.branch }}
+                echo "TAG=$TAG" >> $GITHUB_ENV
+            else
+                echo "使用自动获取的版本：${{ needs.check.outputs.tag }}"
+                TAG=${{ needs.check.outputs.tag }}
+                echo "TAG=$TAG" >> $GITHUB_ENV
+            fi
+          else
+            echo "使用自动获取的版本：${{ needs.check.outputs.tag }}"
+            TAG=${{ needs.check.outputs.tag }}
+            echo "TAG=$TAG" >> $GITHUB_ENV
+          fi
+          
+      - uses: actions/checkout@v4
+        with:
+          repository: sigoden/dufs
+          ref: ${{ env.TAG }}
+          
+      - name: 下载apple-windows工具链
+        if: ${{ matrix.TARGET == 'aarch64-apple-darwin' || matrix.TARGET == 'aarch64-pc-windows-msvc' || matrix.TARGET == 'x86_64-apple-darwin' || matrix.TARGET == 'x86_64-pc-windows-msvc' || matrix.TARGET == 'i686-pc-windows-msvc' }}
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+          
+      - name: 下载apple-windows编译工具
+        if: ${{ matrix.TARGET == 'aarch64-apple-darwin' || matrix.TARGET == 'aarch64-pc-windows-msvc' || matrix.TARGET == 'i686-pc-windows-msvc' }}
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cross
+      - name: 下载linux编译工具
+        if: ${{ matrix.TARGET != 'x86_64-unknown-freebsd' }}
+        run: |
+          mkdir -p /opt/musl_gcc
+          rustup set auto-self-update disable
+  
+          wget -q -c https://musl.cc/${{ env.URL }}-cross.tgz -P /opt/musl_gcc/
+          tar zxf /opt/musl_gcc/${{ env.URL }}-cross.tgz -C /opt/musl_gcc/
+          sudo ln -s /opt/musl_gcc/${{ env.URL }}-cross/bin/*gcc /usr/bin/
+          sudo apt-get update && sudo apt-get install -qq crossbuild-essential-arm64 crossbuild-essential-armhf musl-tools
+          if [[ $TARGET =~ ^mips.*$ ]]; then
+            rustup install 1.72.1
+            rustup default 1.72.1
+          else
+            rustup install 1.77
+            rustup default 1.77
+          fi
+          rustup target add ${{ env.TARGET }}
+          #添加交叉编译配置
+          cat >>~/.cargo/config <<EOF
+          [target.x86_64-unknown-linux-musl]
+          linker = "x86_64-linux-musl-gcc"
+          rustflags = ["-C", "linker-flavor=ld.lld"]
+          
+          [target.i686-unknown-linux-musl]
+          linker = "i686-linux-musl-gcc"
+          rustflags = ["-C", "target-feature=+crt-static"] 
+          
+          [target.aarch64-unknown-linux-musl]
+          linker = "aarch64-linux-musl-gcc"
+          rustflags = ["-C", "target-feature=+crt-static"]
+          
+          [target.armv7-unknown-linux-musleabi]
+          linker = "armv7m-linux-musleabi-gcc"
+          rustflags = ["-C", "target-feature=+crt-static"]
+
+          [target.armv7-unknown-linux-musleabihf]
+          linker = "armv7l-linux-musleabihf-gcc"
+          rustflags = ["-C", "target-feature=+crt-static"]
+          
+          [target.arm-unknown-linux-musleabi]
+          linker = "arm-linux-musleabi-gcc"
+          rustflags = ["-C", "target-feature=+crt-static"]
+
+          [target.arm-unknown-linux-musleabihf]
+          linker = "arm-linux-musleabihf-gcc"
+          rustflags = ["-C", "target-feature=+crt-static"]
+          
+          [target.mipsel-unknown-linux-musl]
+          linker = "mipsel-linux-muslsf-gcc"
+          rustflags = ["-C", "target-feature=+crt-static"]
+          
+          [target.mips-unknown-linux-musl]
+          linker = "mips-linux-muslsf-gcc"
+          rustflags = ["-C", "target-feature=+crt-static"]      
+          EOF
+      - name: 打印版本信息 (Rust, cargo, GCC)
+        shell: bash
+        run: |
+          rustup -V
+          rustup toolchain list
+          rustup default
+          cargo -V
+          rustc -V
+      - name: 下载 assets 页面
+        uses: actions/download-artifact@v4
+        with:
+          name: dufs-material-assets-embed
+          path: dufs-material-assets-embed
+      - name: 替换自定义 assets 页面
+        shell: bash
+        run: |
+          cp dufs-material-assets-embed/index.css assets/index.css
+          cp dufs-material-assets-embed/index.html assets/index.html
+          cp dufs-material-assets-embed/index.js assets/index.js
+      - name: Build
+        shell: bash
+        id: build
+        run: |
+          $BUILD_CMD build --locked --release --target=${{ matrix.target }} ${{ matrix.cargo-flags }}
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            echo "executable=target/${{ matrix.target }}/release/dufs.exe" >> $GITHUB_OUTPUT
+          else
+            echo "executable=target/${{ matrix.target }}/release/dufs" >> $GITHUB_OUTPUT
+          fi
+      - name: Upload executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: dufs-mod-${{ steps.check-tag.outputs.version }}-${{ matrix.target }}
+          path: ${{ steps.build.outputs.executable }}
