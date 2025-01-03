@@ -1,0 +1,96 @@
+name: 测试
+
+on:
+  workflow_dispatch:
+  
+env:
+  TZ: Asia/Shanghai
+
+jobs:
+  ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+    - name: 当前机器配置（Ubuntu）
+      if: runner.os == 'Linux'  # 只在 Linux 环境运行
+      run: |
+        echo -e "\e[34m--------------------------系统信息--------------------------\e[0m"
+        echo -e "\e[32m操作系统名称及版本:\e[0m $(lsb_release -a 2>/dev/null || cat /etc/os-release)"
+        echo -e "\e[32m内核版本:\e[0m $(uname -r)"
+        echo -e "\e[32m架构:\e[0m $(uname -m)"
+        echo -e "\n"
+        echo -e "\e[34m--------------------------CPU信息--------------------------\e[0m"
+        echo -e "\e[32mCPU物理数量:\e[0m $(cat /proc/cpuinfo| grep "physical id"| sort| uniq| wc -l)"
+        echo -e "\e[32mCPU核心及版本信息：\e[0m $(cat /proc/cpuinfo | grep name | cut -f2 -d: | uniq -c) \n"
+        echo -e "\e[34m--------------------------内存信息--------------------------\e[0m"
+        echo -e "\e[32m已安装内存详细信息：\e[0m"
+        sudo lshw -short -C memory | grep GiB
+        echo -e "\n"
+        echo -e "\e[34m--------------------------硬盘信息--------------------------\e[0m"
+        echo -e "\e[32m硬盘数量：\e[0m $(ls /dev/sd* | grep -v [1-9] | wc -l) \n"
+        echo -e "\e[32m硬盘详情：\e[0m"
+        df -Th
+
+
+  Windows:
+    runs-on: windows-latest
+    steps:
+    - name: 当前机器配置（Windows）
+      if: runner.os == 'Windows'  # 只在 Windows 环境运行
+      run: |
+        echo --------------------------系统信息--------------------------
+        echo 操作系统名称及版本:
+        systeminfo | findstr /B /C:"OS Name" /C:"OS Version"
+        echo 架构:
+        wmic os get osarchitecture
+        echo.
+        echo --------------------------CPU信息--------------------------
+        echo CPU型号:
+        wmic cpu get name
+        echo 核心数量:
+        wmic cpu get NumberOfCores
+        echo 逻辑处理器数量:
+        wmic cpu get NumberOfLogicalProcessors
+        echo.
+        echo --------------------------内存信息--------------------------
+        echo 总内存:
+        wmic MemoryChip get Capacity
+        echo 内存类型:
+        wmic MemoryChip get MemoryType
+        echo.
+        echo --------------------------硬盘信息--------------------------
+        echo 硬盘数量:
+        wmic diskdrive get size
+        echo 硬盘接口类型:
+        wmic diskdrive get InterfaceType
+        echo 硬盘分区详情:
+        wmic partition get Name, Size, Type
+
+  macOS:
+    runs-on: macos-latest
+    steps:
+    - name: 当前机器配置（macOS）
+      if: runner.os == 'macOS'  # 只在 macOS 环境运行
+      run: |
+        echo "--------------------------系统信息--------------------------"
+        echo "操作系统名称及版本:"
+        sw_vers
+        echo "内核版本:"
+        uname -r
+        echo "架构:"
+        uname -m
+        echo
+        echo "--------------------------CPU信息--------------------------"
+        echo "CPU型号:"
+        sysctl -n machdep.cpu.brand_string
+        echo "CPU核心数量:"
+        sysctl -n hw.physicalcpu
+        echo "CPU逻辑处理器数量:"
+        sysctl -n hw.logicalcpu
+        echo
+        echo "--------------------------内存信息--------------------------"
+        echo "总内存:"
+        sysctl -n hw.memsize | awk '{print $1/1024/1024/1024 " GB"}'
+        echo
+        echo "--------------------------硬盘信息--------------------------"
+        echo "硬盘详细信息:"
+        diskutil list
