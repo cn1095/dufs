@@ -14,21 +14,19 @@ jobs:
       if: runner.os == 'Linux'  # 只在 Linux 环境运行
       run: |
         echo -e "\e[34m--------------------------系统信息--------------------------\e[0m"
-        echo -e "\e[32m操作系统名称及版本:\e[0m $(lsb_release -a 2>/dev/null || cat /etc/os-release)"
-        echo -e "\e[32m内核版本:\e[0m $(uname -r)"
-        echo -e "\e[32m架构:\e[0m $(uname -m)"
+        echo -e "\033[1;33m操作系统:\033[0m $(lsb_release -d 2>/dev/null | cut -f2 | xargs)"
+        echo -e "\033[1;33m内核版本:\033[0m $(uname -r)"
+        echo -e "\033[1;33m架构:\033[0m $(uname -m)"
         echo -e "\n"
         echo -e "\e[34m--------------------------CPU信息--------------------------\e[0m"
-        echo -e "\e[32mCPU物理数量:\e[0m $(cat /proc/cpuinfo| grep "physical id"| sort| uniq| wc -l)"
-        echo -e "\e[32mCPU核心及版本信息：\e[0m $(cat /proc/cpuinfo | grep name | cut -f2 -d: | uniq -c) \n"
+        echo -e "\033[1;33mCPU数量:\033[0m $(cat /proc/cpuinfo | grep 'physical id' | sort | uniq | wc -l)"
+        echo -e "\033[1;33m核心信息:\033[0m $(cat /proc/cpuinfo | grep name | cut -f2 -d: | uniq -c | xargs)"
         echo -e "\e[34m--------------------------内存信息--------------------------\e[0m"
-        echo -e "\e[32m已安装内存详细信息：\e[0m"
-        sudo lshw -short -C memory | grep GiB
+        echo -e "\033[1;33m总内存:\033[0m $(free -h | grep Mem | awk '{print $2}')"
         echo -e "\n"
         echo -e "\e[34m--------------------------硬盘信息--------------------------\e[0m"
-        echo -e "\e[32m硬盘数量：\e[0m $(ls /dev/sd* | grep -v [1-9] | wc -l) \n"
-        echo -e "\e[32m硬盘详情：\e[0m"
-        df -Th
+        echo -e "\033[1;33m硬盘数量:\033[0m $(ls /dev/sd* | grep -v [1-9] | wc -l)"
+        echo -e "\033[1;33m硬盘详情:\033[0m $(df -hT --total | grep total | awk '{print $2,$3,$4}')"
 
 
   Windows:
@@ -38,32 +36,20 @@ jobs:
       if: runner.os == 'Windows'  # 只在 Windows 环境运行
       run: |
         echo --------------------------系统信息--------------------------
-        echo 操作系统名称及版本:
-        systeminfo | findstr /B /C:"OS Name" /C:"OS Version"
-        echo 架构:
-        wmic os get osarchitecture
+        Write-Host "操作系统: " -NoNewline; Write-Host (Get-CimInstance Win32_OperatingSystem).Caption -ForegroundColor Yellow
+        Write-Host "版本: " -NoNewline; Write-Host (Get-CimInstance Win32_OperatingSystem).Version -ForegroundColor Yellow
+        Write-Host "架构: " -NoNewline; Write-Host (Get-CimInstance Win32_OperatingSystem).OSArchitecture -ForegroundColor Yellow
         echo.
         echo --------------------------CPU信息--------------------------
-        echo CPU型号:
-        wmic cpu get name
-        echo 核心数量:
-        wmic cpu get NumberOfCores
-        echo 逻辑处理器数量:
-        wmic cpu get NumberOfLogicalProcessors
+        Write-Host "CPU: " -NoNewline; Write-Host (Get-CimInstance Win32_Processor).Name -ForegroundColor Yellow
+        Write-Host "核心数量: " -NoNewline; Write-Host (Get-CimInstance Win32_Processor).NumberOfCores -ForegroundColor Yellow
+        Write-Host "逻辑处理器: " -NoNewline; Write-Host (Get-CimInstance Win32_Processor).NumberOfLogicalProcessors -ForegroundColor Yellow
         echo.
         echo --------------------------内存信息--------------------------
-        echo 总内存:
-        wmic MemoryChip get Capacity
-        echo 内存类型:
-        wmic MemoryChip get MemoryType
+        Write-Host "总内存: " -NoNewline; Write-Host ("{0:N2}" -f ((Get-CimInstance Win32_PhysicalMemory | Measure-Object -Property Capacity -Sum).Sum / 1GB))"GB" -ForegroundColor Yellow
         echo.
         echo --------------------------硬盘信息--------------------------
-        echo 硬盘数量:
-        wmic diskdrive get size
-        echo 硬盘接口类型:
-        wmic diskdrive get InterfaceType
-        echo 硬盘分区详情:
-        wmic partition get Name, Size, Type
+        Write-Host "硬盘数量: " -NoNewline; Write-Host (Get-CimInstance Win32_DiskDrive | Measure-Object).Count -ForegroundColor Yellow
 
   macOS:
     runs-on: macos-latest
@@ -72,25 +58,16 @@ jobs:
       if: runner.os == 'macOS'  # 只在 macOS 环境运行
       run: |
         echo "--------------------------系统信息--------------------------"
-        echo "操作系统名称及版本:"
-        sw_vers
-        echo "内核版本:"
-        uname -r
-        echo "架构:"
-        uname -m
-        echo
+        echo -e "\033[1;33m操作系统:\033[0m $(sw_vers -productName)"
+        echo -e "\033[1;33m版本:\033[0m $(sw_vers -productVersion)"
+        echo -e "\033[1;33m架构:\033[0m $(uname -m)"
         echo "--------------------------CPU信息--------------------------"
-        echo "CPU型号:"
-        sysctl -n machdep.cpu.brand_string
-        echo "CPU核心数量:"
-        sysctl -n hw.physicalcpu
-        echo "CPU逻辑处理器数量:"
-        sysctl -n hw.logicalcpu
+        echo -e "\033[1;33mCPU:\033[0m $(sysctl -n machdep.cpu.brand_string)"
+        echo -e "\033[1;33m核心数量:\033[0m $(sysctl -n hw.physicalcpu)"
+        echo -e "\033[1;33m逻辑处理器:\033[0m $(sysctl -n hw.logicalcpu)"
         echo
         echo "--------------------------内存信息--------------------------"
-        echo "总内存:"
-        sysctl -n hw.memsize | awk '{print $1/1024/1024/1024 " GB"}'
+        echo -e "\033[1;33m总内存:\033[0m $(sysctl -n hw.memsize | awk '{print $1/1024/1024/1024 "GB"}')"
         echo
         echo "--------------------------硬盘信息--------------------------"
-        echo "硬盘详细信息:"
-        diskutil list
+        echo -e "\033[1;33m硬盘数量:\033[0m $(diskutil list | grep -c '/dev/disk')"
