@@ -13,43 +13,59 @@ jobs:
     - name: 当前机器配置（Ubuntu）
       if: runner.os == 'Linux'  # 只在 Linux 环境运行
       run: |
-        echo -e "\e[34m--------------------------系统信息--------------------------\e[0m"
-        echo -e "\033[1;33m操作系统:\033[0m $(lsb_release -d 2>/dev/null | cut -f2 | xargs)"
-        echo -e "\033[1;33m内核版本:\033[0m $(uname -r)"
-        echo -e "\033[1;33m架构:\033[0m $(uname -m)"
-        echo -e "\n"
-        echo -e "\e[34m--------------------------CPU信息--------------------------\e[0m"
-        echo -e "\033[1;33mCPU数量:\033[0m $(cat /proc/cpuinfo | grep 'physical id' | sort | uniq | wc -l)"
-        echo -e "\033[1;33m核心信息:\033[0m $(cat /proc/cpuinfo | grep name | cut -f2 -d: | uniq -c | xargs)"
-        echo -e "\e[34m--------------------------内存信息--------------------------\e[0m"
-        echo -e "\033[1;33m总内存:\033[0m $(free -h | grep Mem | awk '{print $2}')"
-        echo -e "\n"
-        echo -e "\e[34m--------------------------硬盘信息--------------------------\e[0m"
-        echo -e "\033[1;33m硬盘数量:\033[0m $(ls /dev/sd* | grep -v [1-9] | wc -l)"
-        echo -e "\033[1;33m硬盘详情:\033[0m $(df -hT --total | grep total | awk '{print $2,$3,$4}')"
+        echo -e "\e[1;34m======================= 系统信息 =======================\e[0m"
+        echo -e "\e[1;33m操作系统:\e[0m $(lsb_release -d 2>/dev/null | cut -f2 | xargs)"
+        echo -e "\e[1;33m内核版本:\e[0m $(uname -r)"
+        echo -e "\e[1;33m架构:\e[0m $(uname -m)"
+        echo -e "\e[1;33m当前用户:\e[0m $(whoami)"
+        echo -e "\e[1;33m主机名:\e[0m $(hostname)"
+        echo
+        echo -e "\e[1;34m======================= CPU 信息 =======================\e[0m"
+        echo -e "\e[1;33mCPU 数量:\e[0m $(cat /proc/cpuinfo | grep 'physical id' | sort | uniq | wc -l)"
+        echo -e "\e[1;33m核心信息:\e[0m $(cat /proc/cpuinfo | grep 'model name' | uniq | awk -F': ' '{print $2}')"
+        echo -e "\e[1;33m逻辑处理器:\e[0m $(nproc)"
+        echo
+        echo -e "\e[1;34m======================= 内存信息 =======================\e[0m"
+        echo -e "\e[1;33m总内存:\e[0m $(free -h | grep Mem | awk '{print $2}')"
+        echo -e "\e[1;33m可用内存:\e[0m $(free -h | grep Mem | awk '{print $7}')"
+        echo
+        echo -e "\e[1;34m======================= 硬盘信息 =======================\e[0m"
+        echo -e "\e[1;33m硬盘数量:\e[0m $(lsblk | grep -c 'disk')"
+        echo -e "\e[1;33m硬盘详情:\e[0m"
+        lsblk -o NAME,SIZE,TYPE,MOUNTPOINT | grep 'disk'
+        echo
+        echo -e "\e[1;34m======================= 网络信息 =======================\e[0m"
+        echo -e "\e[1;33mIP 地址:\e[0m $(hostname -I | awk '{print $1}')"
+        echo -e "\e[1;33m网络接口:\e[0m"
+        ip addr show | grep -E '^[0-9]+:' | awk -F': ' '{print $2}'
 
-
-  Windows:
+  windows:
     runs-on: windows-latest
     steps:
     - name: 当前机器配置（Windows）
       if: runner.os == 'Windows'  # 只在 Windows 环境运行
       run: |
-        echo --------------------------系统信息--------------------------
+        Write-Host "======================= 系统信息 =======================" -ForegroundColor Blue
         Write-Host "操作系统: " -NoNewline; Write-Host (Get-CimInstance Win32_OperatingSystem).Caption -ForegroundColor Yellow
         Write-Host "版本: " -NoNewline; Write-Host (Get-CimInstance Win32_OperatingSystem).Version -ForegroundColor Yellow
         Write-Host "架构: " -NoNewline; Write-Host (Get-CimInstance Win32_OperatingSystem).OSArchitecture -ForegroundColor Yellow
-        
-        echo --------------------------CPU信息--------------------------
+        Write-Host "当前用户: " -NoNewline; Write-Host $env:USERNAME -ForegroundColor Yellow
+        Write-Host "主机名: " -NoNewline; Write-Host $env:COMPUTERNAME -ForegroundColor Yellow
+        Write-Host ""
+        Write-Host "======================= CPU 信息 =======================" -ForegroundColor Blue
         Write-Host "CPU: " -NoNewline; Write-Host (Get-CimInstance Win32_Processor).Name -ForegroundColor Yellow
         Write-Host "核心数量: " -NoNewline; Write-Host (Get-CimInstance Win32_Processor).NumberOfCores -ForegroundColor Yellow
         Write-Host "逻辑处理器: " -NoNewline; Write-Host (Get-CimInstance Win32_Processor).NumberOfLogicalProcessors -ForegroundColor Yellow
-        
-        echo --------------------------内存信息--------------------------
+        Write-Host ""
+        Write-Host "======================= 内存信息 =======================" -ForegroundColor Blue
         Write-Host "总内存: " -NoNewline; Write-Host ("{0:N2}" -f ((Get-CimInstance Win32_PhysicalMemory | Measure-Object -Property Capacity -Sum).Sum / 1GB))"GB" -ForegroundColor Yellow
-        
-        echo --------------------------硬盘信息--------------------------
+        Write-Host ""
+        Write-Host "======================= 硬盘信息 =======================" -ForegroundColor Blue
         Write-Host "硬盘数量: " -NoNewline; Write-Host (Get-CimInstance Win32_DiskDrive | Measure-Object).Count -ForegroundColor Yellow
+        Write-Host "硬盘详情: " -NoNewline; Get-CimInstance Win32_DiskDrive | Select-Object Model,Size | Format-Table -AutoSize
+        Write-Host ""
+        Write-Host "======================= 网络信息 =======================" -ForegroundColor Blue
+        Write-Host "IP 地址: " -NoNewline; Write-Host (Get-NetIPAddress | Where-Object { $_.AddressFamily -eq 'IPv4' -and $_.PrefixOrigin -eq 'Dhcp' }).IPAddress -ForegroundColor Yellow
 
   macOS:
     runs-on: macos-latest
@@ -57,17 +73,25 @@ jobs:
     - name: 当前机器配置（macOS）
       if: runner.os == 'macOS'  # 只在 macOS 环境运行
       run: |
-        echo "--------------------------系统信息--------------------------"
+        echo -e "\033[1;34m======================= 系统信息 =======================\033[0m"
         echo -e "\033[1;33m操作系统:\033[0m $(sw_vers -productName)"
         echo -e "\033[1;33m版本:\033[0m $(sw_vers -productVersion)"
         echo -e "\033[1;33m架构:\033[0m $(uname -m)"
-        echo "--------------------------CPU信息--------------------------"
+        echo -e "\033[1;33m当前用户:\033[0m $(whoami)"
+        echo -e "\033[1;33m主机名:\033[0m $(hostname)"
+        echo
+        echo -e "\033[1;34m======================= CPU 信息 =======================\033[0m"
         echo -e "\033[1;33mCPU:\033[0m $(sysctl -n machdep.cpu.brand_string)"
         echo -e "\033[1;33m核心数量:\033[0m $(sysctl -n hw.physicalcpu)"
         echo -e "\033[1;33m逻辑处理器:\033[0m $(sysctl -n hw.logicalcpu)"
         echo
-        echo "--------------------------内存信息--------------------------"
+        echo -e "\033[1;34m======================= 内存信息 =======================\033[0m"
         echo -e "\033[1;33m总内存:\033[0m $(sysctl -n hw.memsize | awk '{print $1/1024/1024/1024 "GB"}')"
         echo
-        echo "--------------------------硬盘信息--------------------------"
+        echo -e "\033[1;34m======================= 硬盘信息 =======================\033[0m"
         echo -e "\033[1;33m硬盘数量:\033[0m $(diskutil list | grep -c '/dev/disk')"
+        echo -e "\033[1;33m硬盘详情:\033[0m"
+        diskutil list
+        echo
+        echo -e "\033[1;34m======================= 网络信息 =======================\033[0m"
+        echo -e "\033[1;33mIP 地址:\033[0m $(ipconfig getifaddr en0)"
