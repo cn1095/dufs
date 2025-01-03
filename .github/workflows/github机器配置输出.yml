@@ -1,4 +1,4 @@
-name: 测试
+name: github机器配置
 
 on:
   workflow_dispatch:
