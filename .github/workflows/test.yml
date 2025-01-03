@@ -39,15 +39,15 @@ jobs:
         Write-Host "操作系统: " -NoNewline; Write-Host (Get-CimInstance Win32_OperatingSystem).Caption -ForegroundColor Yellow
         Write-Host "版本: " -NoNewline; Write-Host (Get-CimInstance Win32_OperatingSystem).Version -ForegroundColor Yellow
         Write-Host "架构: " -NoNewline; Write-Host (Get-CimInstance Win32_OperatingSystem).OSArchitecture -ForegroundColor Yellow
-        echo.
+        
         echo --------------------------CPU信息--------------------------
         Write-Host "CPU: " -NoNewline; Write-Host (Get-CimInstance Win32_Processor).Name -ForegroundColor Yellow
         Write-Host "核心数量: " -NoNewline; Write-Host (Get-CimInstance Win32_Processor).NumberOfCores -ForegroundColor Yellow
         Write-Host "逻辑处理器: " -NoNewline; Write-Host (Get-CimInstance Win32_Processor).NumberOfLogicalProcessors -ForegroundColor Yellow
-        echo.
+        
         echo --------------------------内存信息--------------------------
         Write-Host "总内存: " -NoNewline; Write-Host ("{0:N2}" -f ((Get-CimInstance Win32_PhysicalMemory | Measure-Object -Property Capacity -Sum).Sum / 1GB))"GB" -ForegroundColor Yellow
-        echo.
+        
         echo --------------------------硬盘信息--------------------------
         Write-Host "硬盘数量: " -NoNewline; Write-Host (Get-CimInstance Win32_DiskDrive | Measure-Object).Count -ForegroundColor Yellow
 
