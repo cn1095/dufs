@@ -1,0 +1,33 @@
+name: 创建 Issue
+
+on:
+  workflow_dispatch:
+    inputs:
+      issue_title:
+        description: "Issue 的标题"
+        required: true
+        type: string
+      issue_body:
+        description: "Issue 的内容"
+        required: true
+        type: string
+
+jobs:
+  create-issue:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 使用 GitHub API 创建 Issue
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        # 提取输入的标题和内容
+        ISSUE_TITLE="${{ github.event.inputs.issue_title }}"
+        ISSUE_BODY="${{ github.event.inputs.issue_body }}"
+
+        # 调用 GitHub API 创建 Issue
+        curl -X POST \
+          -H "Authorization: token $GITHUB_TOKEN" \
+          -H "Accept: application/vnd.github.v3+json" \
+          https://api.github.com/repos/${{ github.repository }}/issues \
+          -d "{\"title\": \"${ISSUE_TITLE}\", \"body\": \"${ISSUE_BODY}\"}"
