@@ -52,6 +52,7 @@ jobs:
         ISSUE_ID: ${{ env.issue_id }}
         REPLY_BODY: ${{ github.event.inputs.reply_body }}
       run: |
+        if [[ -n "$REPLY_BODY" ]] ; then
         # 回复指定内容到 Issue
         curl -X POST \
           -H "Authorization: token $GITHUB_TOKEN" \
@@ -60,7 +61,8 @@ jobs:
           -d "{\"body\": \"${REPLY_BODY}\"}"
 
         echo "已回复内容到 Issue ID: $ISSUE_ID。"
-
+        fi
+        
         # 修改 Issue 的标题为删除线格式
         ORIGINAL_TITLE=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
           -H "Accept: application/vnd.github.v3+json" \
