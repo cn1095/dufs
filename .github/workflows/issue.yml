@@ -1,19 +1,19 @@
-name: Check and Create Issue
+name: 创建 Issue
 
 on:
   workflow_dispatch:
     inputs:
       issue_title:
-        description: "Issue 的标题"
+        description: "请输入 Issue 的标题"
         required: true
         type: string
       issue_body:
-        description: "Issue 的内容"
+        description: "请输入 Issue 的内容"
         required: true
         type: string
 
 permissions:
-  issues: write  # 明确赋予写入 Issue 的权限
+  issues: write  
 
 jobs:
   check-and-create-issue:
