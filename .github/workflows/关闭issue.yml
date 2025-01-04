@@ -64,19 +64,19 @@ jobs:
         fi
         
         # 修改 Issue 的标题为删除线格式
-        ORIGINAL_TITLE=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-          -H "Accept: application/vnd.github.v3+json" \
-          https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_ID} | jq -r '.title')
+        #ORIGINAL_TITLE=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+         # -H "Accept: application/vnd.github.v3+json" \
+          #https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_ID} | jq -r '.title')
 
-        UPDATED_TITLE="~~${ORIGINAL_TITLE}~~"
+        #UPDATED_TITLE="~~${ORIGINAL_TITLE}~~"
 
-        curl -X PATCH \
-          -H "Authorization: token $GITHUB_TOKEN" \
-          -H "Accept: application/vnd.github.v3+json" \
-          https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_ID} \
-          -d "{\"title\": \"${UPDATED_TITLE}\"}"
+        #curl -X PATCH \
+          #-H "Authorization: token $GITHUB_TOKEN" \
+          #-H "Accept: application/vnd.github.v3+json" \
+          #https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_ID} \
+          #-d "{\"title\": \"${UPDATED_TITLE}\"}"
 
-        echo "已将标题更新为删除线格式：${UPDATED_TITLE}。"
+        #echo "已将标题更新为删除线格式：${UPDATED_TITLE}。"
 
         # 关闭 Issue
         curl -X PATCH \
