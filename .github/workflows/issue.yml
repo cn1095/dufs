@@ -11,7 +11,8 @@ on:
         description: "Issue 的内容"
         required: true
         type: string
-
+permissions:
+  issues: write
 jobs:
   create-issue:
     runs-on: ubuntu-latest
